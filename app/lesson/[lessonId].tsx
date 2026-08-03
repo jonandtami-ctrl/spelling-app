@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WordIntroStep } from "@/src/components/lesson/WordIntroStep";
+import { MissingLetterStep } from "@/src/components/lesson/MissingLetterStep";
 import { SpellItGame } from "@/src/components/lesson/SpellItGame";
 import { LessonResults } from "@/src/components/lesson/LessonResults";
 import { EmptyState } from "@/src/components/EmptyState";
@@ -10,9 +11,15 @@ import { findLessonById, getWordsForLesson } from "@/src/services/spellingServic
 import { recordWordAttempt, saveLessonResult } from "@/src/services/progressService";
 import { useProfileStore } from "@/src/store/profileStore";
 import { getGradeTheme } from "@/src/constants/gradeThemes";
-import { colors, spacing, typography } from "@/src/constants/theme";
+import { colors, radii, spacing, typography } from "@/src/constants/theme";
 
-type Phase = "intro" | "practice" | "results";
+type Phase = "intro" | "guided" | "independent" | "results";
+
+const PHASE_STEPS: { phase: Phase; label: string }[] = [
+  { phase: "intro", label: "Learn" },
+  { phase: "guided", label: "Practise" },
+  { phase: "independent", label: "Spell It" },
+];
 
 interface WordResult {
   wordId: string;
@@ -71,11 +78,22 @@ export default function LessonScreen() {
       setWordIndex(wordIndex + 1);
     } else {
       setWordIndex(0);
-      setPhase("practice");
+      setPhase("guided");
     }
   };
 
-  const handlePracticeResult = (correct: boolean, attemptedSpelling: string) => {
+  const handleGuidedResult = () => {
+    // Guided practice is scaffolded (word mostly visible) so it's a
+    // confidence-building warm-up, not scored toward mastery.
+    if (wordIndex < words.length - 1) {
+      setWordIndex(wordIndex + 1);
+    } else {
+      setWordIndex(0);
+      setPhase("independent");
+    }
+  };
+
+  const handleIndependentResult = (correct: boolean, attemptedSpelling: string) => {
     recordWordAttempt(currentWord.id, correct, { attemptedSpelling });
     setResults((prev) => [...prev, { wordId: currentWord.id, correct }]);
 
@@ -89,13 +107,35 @@ export default function LessonScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       {phase !== "results" ? (
-        <View style={styles.topBar}>
-          <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close lesson">
-            <Text style={styles.closeIcon}>✕</Text>
-          </Pressable>
-          <Text style={styles.lessonTitle}>{found.lesson.title}</Text>
-          <View style={{ width: 24 }} />
-        </View>
+        <>
+          <View style={styles.topBar}>
+            <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close lesson">
+              <Text style={styles.closeIcon}>✕</Text>
+            </Pressable>
+            <Text style={styles.lessonTitle}>{found.lesson.title}</Text>
+            <View style={{ width: 24 }} />
+          </View>
+          <View style={styles.stepIndicator}>
+            {PHASE_STEPS.map((step, i) => {
+              const isActive = step.phase === phase;
+              const isPast = PHASE_STEPS.findIndex((s) => s.phase === phase) > i;
+              return (
+                <View key={step.phase} style={styles.stepItem}>
+                  <View
+                    style={[
+                      styles.stepDot,
+                      { backgroundColor: isActive || isPast ? gradeTheme.accent : colors.surfaceMuted },
+                    ]}
+                  />
+                  <Text style={[styles.stepLabel, isActive && { color: gradeTheme.accentDark, fontWeight: "800" }]}>
+                    {step.label}
+                  </Text>
+                  {i < PHASE_STEPS.length - 1 ? <View style={styles.stepLine} /> : null}
+                </View>
+              );
+            })}
+          </View>
+        </>
       ) : null}
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -110,15 +150,26 @@ export default function LessonScreen() {
             onNext={handleIntroNext}
           />
         )}
-        {phase === "practice" && (
-          <SpellItGame
-            key={`practice-${currentWord.id}`}
+        {phase === "guided" && (
+          <MissingLetterStep
+            key={`guided-${currentWord.id}`}
             word={currentWord}
             grade={found.grade}
             index={wordIndex}
             total={words.length}
             accentColor={gradeTheme.accent}
-            onResult={handlePracticeResult}
+            onResult={handleGuidedResult}
+          />
+        )}
+        {phase === "independent" && (
+          <SpellItGame
+            key={`independent-${currentWord.id}`}
+            word={currentWord}
+            grade={found.grade}
+            index={wordIndex}
+            total={words.length}
+            accentColor={gradeTheme.accent}
+            onResult={handleIndependentResult}
           />
         )}
         {phase === "results" && (
@@ -127,6 +178,7 @@ export default function LessonScreen() {
             totalWords={words.length}
             xpEarned={results.filter((r) => r.correct).length * XP_PER_CORRECT_WORD}
             coinsEarned={results.filter((r) => r.correct).length * COINS_PER_CORRECT_WORD}
+            grade={found.grade}
             onDone={() => router.replace(`/unit/${found.lesson.unitId}`)}
           />
         )}
@@ -156,6 +208,34 @@ const styles = StyleSheet.create({
     fontSize: typography.h3.fontSize,
     fontWeight: typography.h3.fontWeight,
     color: colors.textPrimary,
+  },
+  stepIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingBottom: spacing.sm,
+    paddingHorizontal: spacing.lg,
+  },
+  stepItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  stepDot: {
+    width: 10,
+    height: 10,
+    borderRadius: radii.pill,
+    marginRight: spacing.xs,
+  },
+  stepLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontWeight: "600",
+  },
+  stepLine: {
+    width: 20,
+    height: 2,
+    backgroundColor: colors.surfaceMuted,
+    marginHorizontal: spacing.sm,
   },
   content: {
     padding: spacing.lg,

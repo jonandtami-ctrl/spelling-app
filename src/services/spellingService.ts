@@ -47,3 +47,23 @@ export function isCorrectSpelling(attempt: string, correctWord: SpellingWord): b
   const accepted = correctWord.acceptedAnswers?.length ? correctWord.acceptedAnswers : [correctWord.word];
   return accepted.some((answer) => answer.trim().toLowerCase() === normalized);
 }
+
+/**
+ * Splits a word into a plain prefix and a highlighted pattern chunk, so the
+ * UI can visually call out the sound/spelling pattern being taught (e.g. the
+ * "at" in "cat"). Falls back to no highlight if the pattern isn't a simple
+ * word-ending shorthand like "short a: _at".
+ */
+export function splitWordByPattern(word: SpellingWord): { prefix: string; highlight: string } {
+  const pattern = word.spellingPattern;
+  const suffix = pattern?.includes("_") ? pattern.split("_").pop()?.trim() : undefined;
+
+  if (suffix && suffix.length > 0 && suffix.length < word.word.length && word.word.toLowerCase().endsWith(suffix.toLowerCase())) {
+    return {
+      prefix: word.word.slice(0, word.word.length - suffix.length),
+      highlight: word.word.slice(word.word.length - suffix.length),
+    };
+  }
+
+  return { prefix: word.word, highlight: "" };
+}

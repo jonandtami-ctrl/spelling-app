@@ -4,8 +4,10 @@ import { AppCard } from "@/src/components/AppCard";
 import { AppButton } from "@/src/components/AppButton";
 import { WordAudioButton } from "@/src/components/WordAudioButton";
 import { ProgressBar } from "@/src/components/ProgressBar";
+import { Mascot } from "@/src/components/Mascot";
 import { SpellingWord } from "@/src/types/spelling";
 import { speakSentence, speakWord } from "@/src/services/speechService";
+import { splitWordByPattern } from "@/src/services/spellingService";
 import { colors, radii, spacing, typography } from "@/src/constants/theme";
 
 interface WordIntroStepProps {
@@ -23,6 +25,7 @@ export function WordIntroStep({ word, grade, index, total, accentColor, onNext }
   }, [word.id]);
 
   const isLast = index === total - 1;
+  const { prefix, highlight } = splitWordByPattern(word);
 
   return (
     <View style={styles.container}>
@@ -32,7 +35,11 @@ export function WordIntroStep({ word, grade, index, total, accentColor, onNext }
       </Text>
 
       <AppCard style={styles.wordCard}>
-        <Text style={styles.word}>{word.word}</Text>
+        <Mascot mood="idle" bounceKey={word.id} size={44} />
+        <Text style={styles.word}>
+          {prefix}
+          {highlight ? <Text style={{ color: accentColor }}>{highlight}</Text> : null}
+        </Text>
         {word.syllables && word.syllables.length > 1 ? (
           <Text style={styles.syllables}>{word.syllables.join(" · ")}</Text>
         ) : null}

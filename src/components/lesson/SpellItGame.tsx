@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
+import * as Haptics from "expo-haptics";
 import { AppCard } from "@/src/components/AppCard";
 import { AppButton } from "@/src/components/AppButton";
 import { WordAudioButton } from "@/src/components/WordAudioButton";
 import { ProgressBar } from "@/src/components/ProgressBar";
+import { Mascot, MascotMood } from "@/src/components/Mascot";
+import { Confetti } from "@/src/components/Confetti";
 import { SpellingWord } from "@/src/types/spelling";
 import { isCorrectSpelling } from "@/src/services/spellingService";
-import { speakSentence, speakWord } from "@/src/services/speechService";
+import { speakSentence, speakText, speakWord } from "@/src/services/speechService";
+import { getRandomEncouragement, getRandomGentleRetry } from "@/src/services/gameEngine";
 import { colors, radii, spacing, typography } from "@/src/constants/theme";
 
 interface SpellItGameProps {
@@ -18,12 +22,11 @@ interface SpellItGameProps {
   onResult: (correct: boolean, attemptedSpelling: string) => void;
 }
 
-const ENCOURAGEMENTS = ["Great spelling!", "You got it!", "Word wizard!", "Excellent work!", "Amazing!", "Perfect!"];
-
 export function SpellItGame({ word, grade, index, total, accentColor, onResult }: SpellItGameProps) {
   const [attempt, setAttempt] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [wasCorrect, setWasCorrect] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     speakWord(word.word, grade, () => speakSentence(word.sentence, grade));
@@ -32,16 +35,26 @@ export function SpellItGame({ word, grade, index, total, accentColor, onResult }
   const handleSubmit = () => {
     if (attempt.trim().length === 0) return;
     const correct = isCorrectSpelling(attempt, word);
+    const feedbackMessage = correct ? getRandomEncouragement() : getRandomGentleRetry();
+
     setWasCorrect(correct);
+    setMessage(feedbackMessage);
     setSubmitted(true);
-    if (!correct) speakWord(word.word, grade);
+
+    if (correct) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      speakText(feedbackMessage, grade);
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+      speakWord(word.word, grade);
+    }
   };
 
   const handleContinue = () => {
     onResult(wasCorrect, attempt.trim());
   };
 
-  const message = wasCorrect ? ENCOURAGEMENTS[index % ENCOURAGEMENTS.length] : "You were close. Let's look at the word again.";
+  const mood: MascotMood = !submitted ? "idle" : wasCorrect ? "celebrate" : "oops";
 
   return (
     <View style={styles.container}>
@@ -51,6 +64,10 @@ export function SpellItGame({ word, grade, index, total, accentColor, onResult }
       </Text>
 
       <AppCard style={styles.card}>
+        {submitted && wasCorrect ? <Confetti key={`${word.id}-confetti`} pieceCount={12} /> : null}
+
+        <Mascot mood={mood} bounceKey={`${word.id}-${submitted}`} size={48} />
+
         <Text style={styles.instruction}>Listen, then spell the word.</Text>
 
         <View style={styles.audioRow}>
