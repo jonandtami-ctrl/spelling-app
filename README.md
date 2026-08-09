@@ -6,13 +6,22 @@ A mobile-first, game-like spelling app for Grades 1-8, built with Expo, Expo Rou
 
 ## Status: Phase 1 — Foundation
 
-This is the first build: app shell, navigation, design system, onboarding, local storage, the home screen, sample Grade 1 content, and a full lesson flow (word introduction → Spell It game → results) with progress saved locally.
+This is the first build: app shell, navigation, design system, onboarding, local storage, the home screen, and a full lesson flow (word introduction → guided practice → Spell It game → results) with progress saved locally.
+
+**Grade content so far:**
+- **Grade 1** (ages 6-7): short-vowel CVC words (`Short A Words`)
+- **Grade 2** (ages 7-8): long-vowel silent-e / "magic e" words (`Magic E Words`)
+
+Each grade's word list follows a standard structured-literacy phonics scope and sequence (short vowels → silent e → vowel teams/r-controlled → prefixes/suffixes/homophones → Greek & Latin roots), documented in a header comment at the top of each `src/data/spelling/gradeN.ts` file. Grades 3-8 aren't built yet.
 
 ## Getting started
 
 ```bash
 npm install
-npm run start   # then press w for web, i for iOS, a for Android
+npm run start            # then press w for web, i for iOS, a for Android
+npm run typecheck        # TypeScript strict check
+npm run validate-content # verifies every word/lesson/unit cross-reference, every sentence
+                          # actually contains its target word, and accepted answers match
 ```
 
 ## Project structure
@@ -30,4 +39,4 @@ src/types/            Shared TypeScript interfaces
 
 ## Next recommended phase
 
-**Phase 2: Core Learning** — build out the Unit/Lesson experience further (Missing Letter game, richer guided practice) and grade 2-8 content.
+Continue building grade content one grade at a time (Grade 3: vowel teams, silent letters), each grounded in a real phonics scope and sequence and checked with `npm run validate-content` before merging. Then round out the remaining games (Word Scramble, Spelling Choice, Word Builder) using the same `src/services/gameEngine.ts` helpers.

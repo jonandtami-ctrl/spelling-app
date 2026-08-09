@@ -74,7 +74,7 @@ export default function HomeScreen() {
           <Text style={styles.greeting}>Hi, {profile.name}! {gradeTheme.emoji}</Text>
           <View style={[styles.gradePill, { backgroundColor: gradeTheme.soft }]}>
             <Text style={[styles.gradePillText, { color: gradeTheme.accentDark }]}>
-              Grade {profile.grade} · {gradeTheme.name}
+              Grade {profile.grade} · {gradeTheme.ageRange} · {gradeTheme.name}
             </Text>
           </View>
         </View>

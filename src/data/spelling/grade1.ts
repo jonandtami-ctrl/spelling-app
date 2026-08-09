@@ -1,5 +1,12 @@
 import { GradeContent, Lesson, SpellingWord, Unit } from "@/src/types/spelling";
 
+// Grade 1 (ages 6-7) scope: short-vowel CVC words are the standard starting
+// point in structured-literacy phonics progressions (e.g. Orton-Gillingham,
+// Reading Rockets K-1 phonics scope and sequence) — students blend and
+// segment three-letter words before moving to blends, digraphs, and long
+// vowel patterns in Grade 2. Every word below is single-syllable, uses only
+// letter-sounds a Grade 1 reader has been taught, and every spelling has
+// been hand-checked against a standard dictionary.
 const GRADE = 1;
 const UNIT_ID = "g1-u1-short-a";
 const LESSON_1 = `${UNIT_ID}-l1`;

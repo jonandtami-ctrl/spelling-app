@@ -15,11 +15,12 @@ const GRADES = Array.from(
 export default function OnboardingGrade() {
   const grade = useOnboardingStore((s) => s.grade);
   const setGrade = useOnboardingStore((s) => s.setGrade);
+  const selectedTheme = GRADE_THEMES[grade];
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Choose your grade</Text>
-      <Text style={styles.subtitle}>You can always change this later.</Text>
+      <Text style={styles.subtitle}>This sets the word lists and difficulty. A parent can change it later in the Parent Area.</Text>
 
       <FlatList
         data={GRADES}
@@ -34,22 +35,36 @@ export default function OnboardingGrade() {
             <Pressable
               onPress={() => setGrade(item)}
               accessibilityRole="button"
-              accessibilityLabel={`Grade ${item}, ${theme.name}`}
+              accessibilityLabel={`Grade ${item}, ${theme.ageRange}, ${theme.name}`}
+              accessibilityState={{ selected }}
               style={[
                 styles.card,
                 { borderColor: selected ? theme.accent : colors.border, backgroundColor: selected ? theme.soft : colors.surface },
               ]}
             >
+              {selected ? (
+                <View style={[styles.checkBadge, { backgroundColor: theme.accent }]}>
+                  <Text style={styles.checkBadgeText}>✓</Text>
+                </View>
+              ) : null}
               <Text style={styles.cardEmoji}>{theme.emoji}</Text>
               <Text style={styles.cardGrade}>Grade {item}</Text>
+              <Text style={[styles.cardAge, selected && { color: theme.accentDark }]}>{theme.ageRange}</Text>
               <Text style={styles.cardTheme}>{theme.name}</Text>
+              <Text style={styles.cardFocus}>{theme.focus}</Text>
             </Pressable>
           );
         }}
       />
 
+      <View style={[styles.selectionBanner, { backgroundColor: selectedTheme.soft, borderColor: selectedTheme.accent }]}>
+        <Text style={[styles.selectionBannerText, { color: selectedTheme.accentDark }]}>
+          {selectedTheme.emoji} You picked Grade {grade} · {selectedTheme.ageRange}
+        </Text>
+      </View>
+
       <View style={styles.footer}>
-        <AppButton label="Continue" onPress={() => router.push("/onboarding/avatar")} />
+        <AppButton label={`Continue with Grade ${grade}`} onPress={() => router.push("/onboarding/avatar")} />
       </View>
     </View>
   );
@@ -87,6 +102,22 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     alignItems: "center",
     marginBottom: spacing.md,
+    position: "relative",
+  },
+  checkBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 22,
+    height: 22,
+    borderRadius: radii.pill,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkBadgeText: {
+    color: colors.textInverse,
+    fontSize: 13,
+    fontWeight: "800",
   },
   cardEmoji: {
     fontSize: 30,
@@ -97,10 +128,34 @@ const styles = StyleSheet.create({
     fontWeight: typography.h3.fontWeight,
     color: colors.textPrimary,
   },
+  cardAge: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
   cardTheme: {
     fontSize: typography.caption.fontSize,
     color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+  cardFocus: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: "center",
     marginTop: 2,
+    paddingHorizontal: spacing.sm,
+  },
+  selectionBanner: {
+    borderWidth: 2,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    alignItems: "center",
+  },
+  selectionBannerText: {
+    fontSize: typography.body.fontSize,
+    fontWeight: "700",
   },
   footer: {
     marginTop: spacing.sm,
