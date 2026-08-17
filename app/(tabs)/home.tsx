@@ -72,11 +72,17 @@ export default function HomeScreen() {
         <StudentAvatar avatarId={profile.avatarId} size={64} ringColor={gradeTheme.accent} />
         <View style={styles.headerText}>
           <Text style={styles.greeting}>Hi, {profile.name}! {gradeTheme.emoji}</Text>
-          <View style={[styles.gradePill, { backgroundColor: gradeTheme.soft }]}>
+          <Pressable
+            onPress={() => router.push("/grade-select")}
+            accessibilityRole="button"
+            accessibilityLabel={`Grade ${profile.grade}, ${gradeTheme.ageRange}. Tap to change grade.`}
+            style={[styles.gradePill, { backgroundColor: gradeTheme.soft }]}
+          >
             <Text style={[styles.gradePillText, { color: gradeTheme.accentDark }]}>
               Grade {profile.grade} · {gradeTheme.ageRange} · {gradeTheme.name}
             </Text>
-          </View>
+            <Text style={[styles.gradePillChevron, { color: gradeTheme.accentDark }]}>▾</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -160,6 +166,9 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   gradePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
     alignSelf: "flex-start",
     borderRadius: radii.pill,
     paddingVertical: spacing.xs,
@@ -169,6 +178,10 @@ const styles = StyleSheet.create({
   gradePillText: {
     fontSize: typography.caption.fontSize,
     fontWeight: "700",
+  },
+  gradePillChevron: {
+    fontSize: 12,
+    fontWeight: "800",
   },
   statsRow: {
     flexDirection: "row",

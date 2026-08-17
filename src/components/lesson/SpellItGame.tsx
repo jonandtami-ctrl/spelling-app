@@ -7,10 +7,11 @@ import { WordAudioButton } from "@/src/components/WordAudioButton";
 import { ProgressBar } from "@/src/components/ProgressBar";
 import { Mascot, MascotMood } from "@/src/components/Mascot";
 import { Confetti } from "@/src/components/Confetti";
+import { WordDiff } from "@/src/components/WordDiff";
 import { SpellingWord } from "@/src/types/spelling";
 import { isCorrectSpelling } from "@/src/services/spellingService";
 import { speakSentence, speakText, speakWord } from "@/src/services/speechService";
-import { getRandomEncouragement, getRandomGentleRetry } from "@/src/services/gameEngine";
+import { diffWord, explainMistake, getRandomEncouragement, getRandomGentleRetry } from "@/src/services/gameEngine";
 import { colors, radii, spacing, typography } from "@/src/constants/theme";
 
 interface SpellItGameProps {
@@ -55,6 +56,7 @@ export function SpellItGame({ word, grade, index, total, accentColor, onResult }
   };
 
   const mood: MascotMood = !submitted ? "idle" : wasCorrect ? "celebrate" : "oops";
+  const wordDiff = submitted && !wasCorrect ? diffWord(attempt, word.word) : { attempt: [], correct: [] };
 
   return (
     <View style={styles.container}>
@@ -97,7 +99,12 @@ export function SpellItGame({ word, grade, index, total, accentColor, onResult }
               {wasCorrect ? "✓ " : ""}
               {message}
             </Text>
-            {!wasCorrect ? <Text style={styles.correctSpelling}>Correct spelling: {word.word}</Text> : null}
+            {!wasCorrect ? (
+              <>
+                <WordDiff attempt={wordDiff.attempt} correct={wordDiff.correct} />
+                <Text style={styles.explanation}>{explainMistake(attempt, word.word, word.spellingPattern)}</Text>
+              </>
+            ) : null}
           </View>
         ) : null}
 
@@ -155,9 +162,10 @@ const styles = StyleSheet.create({
     fontWeight: typography.h3.fontWeight,
     textAlign: "center",
   },
-  correctSpelling: {
-    fontSize: typography.body.fontSize,
-    color: colors.textPrimary,
-    fontWeight: "700",
+  explanation: {
+    fontSize: typography.caption.fontSize,
+    color: colors.textSecondary,
+    textAlign: "center",
+    paddingHorizontal: spacing.md,
   },
 });

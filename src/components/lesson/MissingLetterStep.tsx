@@ -84,9 +84,16 @@ export function MissingLetterStep({ word, grade, index, total, accentColor, onRe
         </View>
 
         {submitted ? (
-          <Text style={[styles.feedback, { color: wasCorrect ? colors.successDark : colors.warningDark }]}>
-            {wasCorrect ? "Great pattern spotting!" : `Close! The letter is "${correctLetter.toUpperCase()}".`}
-          </Text>
+          <View style={{ alignItems: "center", gap: spacing.xs }}>
+            <Text style={[styles.feedback, { color: wasCorrect ? colors.successDark : colors.warningDark }]}>
+              {wasCorrect ? "Great pattern spotting!" : `Close! The letter is "${correctLetter.toUpperCase()}".`}
+            </Text>
+            {!wasCorrect && word.spellingPattern ? (
+              <Text style={styles.explanation}>
+                "{word.word}" follows the {word.spellingPattern} pattern — that's why "{correctLetter.toUpperCase()}" fits here.
+              </Text>
+            ) : null}
+          </View>
         ) : null}
 
         {submitted ? (
@@ -141,5 +148,11 @@ const styles = StyleSheet.create({
     fontSize: typography.h3.fontSize,
     fontWeight: typography.h3.fontWeight,
     textAlign: "center",
+  },
+  explanation: {
+    fontSize: typography.caption.fontSize,
+    color: colors.textSecondary,
+    textAlign: "center",
+    paddingHorizontal: spacing.md,
   },
 });

@@ -84,3 +84,59 @@ export function getRandomEncouragement(): string {
 export function getRandomGentleRetry(): string {
   return randomFrom(GENTLE_RETRY_MESSAGES);
 }
+
+export interface LetterDiffEntry {
+  letter: string;
+  match: boolean;
+}
+
+/**
+ * Position-by-position comparison between what the student typed and the
+ * correct word, padded to equal length so both rows line up visually. Used
+ * to highlight exactly which letters were wrong instead of just saying
+ * "incorrect."
+ */
+export function diffWord(attempt: string, correct: string): { attempt: LetterDiffEntry[]; correct: LetterDiffEntry[] } {
+  const a = attempt.trim().toLowerCase();
+  const c = correct.trim().toLowerCase();
+  const length = Math.max(a.length, c.length);
+
+  const attemptDiff: LetterDiffEntry[] = [];
+  const correctDiff: LetterDiffEntry[] = [];
+
+  for (let i = 0; i < length; i++) {
+    const aChar = a[i];
+    const cChar = c[i];
+    const match = aChar != null && aChar === cChar;
+    if (aChar != null) attemptDiff.push({ letter: aChar, match });
+    correctDiff.push({ letter: cChar ?? "", match });
+  }
+
+  return { attempt: attemptDiff, correct: correctDiff };
+}
+
+const POSITION_HINTS = ["the beginning", "the middle", "the end"];
+
+/**
+ * A plain-language explanation of what went wrong: where in the word the
+ * mistake happened, plus the spelling pattern being taught (when known), so
+ * "wrong" always comes with a reason a child can act on next time.
+ */
+export function explainMistake(attempt: string, correctWord: string, spellingPattern?: string): string {
+  const a = attempt.trim().toLowerCase();
+  const c = correctWord.trim().toLowerCase();
+
+  let locationHint: string;
+  if (a.length < c.length) {
+    locationHint = `"${correctWord}" has ${c.length} letters — you're missing one.`;
+  } else if (a.length > c.length) {
+    locationHint = `"${correctWord}" has only ${c.length} letters — you added an extra one.`;
+  } else {
+    const mismatchIndex = c.split("").findIndex((char, i) => char !== a[i]);
+    const positionThird = mismatchIndex === -1 ? 1 : Math.min(2, Math.floor((mismatchIndex / c.length) * 3));
+    locationHint = `Look closely at ${POSITION_HINTS[positionThird]} of the word.`;
+  }
+
+  const patternHint = spellingPattern ? ` This word follows the ${spellingPattern} pattern.` : "";
+  return `${locationHint}${patternHint}`;
+}
