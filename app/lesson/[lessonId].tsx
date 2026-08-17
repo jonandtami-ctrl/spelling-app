@@ -179,7 +179,7 @@ export default function LessonScreen() {
             xpEarned={results.filter((r) => r.correct).length * XP_PER_CORRECT_WORD}
             coinsEarned={results.filter((r) => r.correct).length * COINS_PER_CORRECT_WORD}
             grade={found.grade}
-            onDone={() => router.replace(`/unit/${found.lesson.unitId}`)}
+            onDone={() => router.back()}
           />
         )}
       </ScrollView>

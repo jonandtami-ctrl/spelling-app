@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { LessonCard } from "@/src/components/LessonCard";
 import { EmptyState } from "@/src/components/EmptyState";
 import { useProfileStore } from "@/src/store/profileStore";
@@ -27,30 +28,48 @@ export default function UnitScreen() {
   );
 
   if (!unit) {
-    return <EmptyState emoji="🔍" title="Unit not found" message="This unit isn't available yet." />;
+    return (
+      <SafeAreaView style={styles.container}>
+        <BackBar onBack={() => router.back()} />
+        <EmptyState emoji="🔍" title="Unit not found" message="This unit isn't available yet." />
+      </SafeAreaView>
+    );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{unit.title}</Text>
-      <Text style={styles.subtitle}>{unit.description}</Text>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+      <BackBar onBack={() => router.back()} />
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.title}>{unit.title}</Text>
+        <Text style={styles.subtitle}>{unit.description}</Text>
 
-      {lessons.map((lesson, index) => {
-        const previousCompleted = index === 0 || completedIds.has(lessons[index - 1].id);
-        return (
-          <LessonCard
-            key={lesson.id}
-            title={lesson.title}
-            wordCount={lesson.wordIds.length}
-            order={lesson.order}
-            accentColor={gradeTheme.accent}
-            completed={completedIds.has(lesson.id)}
-            locked={!previousCompleted}
-            onPress={() => router.push(`/lesson/${lesson.id}`)}
-          />
-        );
-      })}
-    </ScrollView>
+        {lessons.map((lesson, index) => {
+          const previousCompleted = index === 0 || completedIds.has(lessons[index - 1].id);
+          return (
+            <LessonCard
+              key={lesson.id}
+              title={lesson.title}
+              wordCount={lesson.wordIds.length}
+              order={lesson.order}
+              accentColor={gradeTheme.accent}
+              completed={completedIds.has(lesson.id)}
+              locked={!previousCompleted}
+              onPress={() => router.push(`/lesson/${lesson.id}`)}
+            />
+          );
+        })}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function BackBar({ onBack }: { onBack: () => void }) {
+  return (
+    <View style={styles.backBar}>
+      <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to Learn" hitSlop={8}>
+        <Text style={styles.backIcon}>‹ Learn</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -58,6 +77,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  backBar: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
+  },
+  backIcon: {
+    fontSize: typography.body.fontSize,
+    fontWeight: "700",
+    color: colors.primary,
   },
   content: {
     padding: spacing.lg,
